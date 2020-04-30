@@ -1,0 +1,27 @@
+name: amqpcat
+base: core18
+version: git
+summary: CLI tool for publishing/consuming with AMQP servers
+description: |
+  netcat for AMQP. A CLI tool for publishing to and consuming from
+  AMQP servers.
+
+grade: devel # devel or stable
+confinement: strict
+
+apps:
+  amqpcat:
+    command: amqpcat
+    plugs:
+      - network
+
+parts:
+  amqpcat:
+    plugin: crystal
+    crystal-build-options:
+      - --release
+    source: .
+    build-packages:
+      - git
+      - libssl-dev
+      - libevent-dev
