@@ -12,8 +12,9 @@ class AMQPCat
     loop do
       connection = @client.connect
       channel = connection.channel
+      props = AMQP::Client::Properties.new(delivery_mode: 2_u8)
       while line = STDIN.gets
-        channel.basic_publish line, exchange, routing_key
+        channel.basic_publish line, exchange, routing_key, props: props
       end
     rescue ex
       STDERR.puts "WARN: #{ex.message}"
