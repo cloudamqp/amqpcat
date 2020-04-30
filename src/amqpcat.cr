@@ -16,6 +16,7 @@ class AMQPCat
       while line = STDIN.gets
         channel.basic_publish line, exchange, routing_key, props: props
       end
+      break
     rescue ex
       STDERR.puts "WARN: #{ex.message}"
     end
