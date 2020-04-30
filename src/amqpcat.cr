@@ -18,7 +18,8 @@ class AMQPCat
       end
       break
     rescue ex
-      STDERR.puts "WARN: #{ex.message}"
+      STDERR.puts ex.message
+      sleep 2
     end
   end
 
@@ -37,7 +38,8 @@ class AMQPCat
         STDOUT.puts msg.body_io
       end
     rescue ex
-      STDERR.puts "WARN: #{ex.message}"
+      STDERR.puts ex.message
+      sleep 2
     end
   end
 end
