@@ -5,6 +5,7 @@ summary: CLI tool for publishing to and consuming from AMQP servers
 description: |
   netcat for AMQP. A CLI tool for publishing to and consuming from
   AMQP servers.
+license: MIT
 
 grade: devel # devel or stable
 confinement: strict
