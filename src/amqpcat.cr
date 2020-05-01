@@ -23,7 +23,7 @@ class AMQPCat
     end
   end
 
-  def consume(exchange_name : String?, routing_key : String?, queue_name : String?)
+  def consume(exchange_name : String?, routing_key : String?, queue_name : String?, format : String)
     exchange_name ||= ""
     routing_key ||= ""
     queue_name ||= ""
@@ -41,12 +41,52 @@ class AMQPCat
         q.bind(exchange_name, routing_key)
       end
       q.subscribe(block: true, no_ack: true) do |msg|
-        STDOUT.puts msg.body_io
+        format_output(STDOUT, format, msg)
       end
     rescue ex
       STDERR.puts ex.message
       sleep 2
     end
+  end
+
+  private def format_output(io, format_str, msg)
+    io.sync = false
+    match = false
+    escape = false
+    Char::Reader.new(format_str).each do |c|
+      if c == '%'
+        match = true
+      elsif match
+        case c
+        when 's'
+          io << msg.body_io
+        when 'e'
+          io << msg.exchange
+        when 'r'
+          io << msg.routing_key
+        when '%'
+          io << '%'
+        else
+          raise "Invalid substitution argument '%#{c}'"
+        end
+        match = false
+      elsif c == '\\'
+        escape = true
+      elsif escape
+        case c
+        when 'n'
+          io << '\n'
+        when 't'
+          io << '\t'
+        else
+          raise "Invalid escape character '\#{c}'"
+        end
+        escape = false
+      else
+        io << c
+      end
+    end
+    io.flush
   end
 end
 
@@ -55,6 +95,17 @@ mode = nil
 exchange = ""
 queue = nil
 routing_key = nil
+format = "%s\n"
+
+FORMAT_STRING_HELP = <<-HELP
+Format string (default "%s\\n")
+\t\t\t\t\t%e: Exchange name
+\t\t\t\t\t%r: Routing key
+\t\t\t\t\t%s: Body, as string
+\t\t\t\t\t\\n: Newline
+\t\t\t\t\t\\t: Tab
+HELP
+
 p = OptionParser.parse do |parser|
   parser.banner = "Usage: #{File.basename PROGRAM_NAME} [arguments]"
   parser.on("-P", "--producer", "Producer mode, reading from STDIN, each line is a new message") { mode = :producer }
@@ -63,6 +114,7 @@ p = OptionParser.parse do |parser|
   parser.on("-e EXCHANGE", "--exchange=EXCHANGE", "Exchange") { |v| exchange = v }
   parser.on("-r ROUTINGKEY", "--routing-key=KEY", "Routing key when publishing") { |v| routing_key = v }
   parser.on("-q QUEUE", "--queue=QUEUE", "Queue to consume from") { |v| queue = v }
+  parser.on("-f FORMAT", "--format=FORMAT", FORMAT_STRING_HELP) { |v| format = v }
   parser.on("-h", "--help", "Show this help message") { |v| puts parser; exit 0 }
   parser.invalid_option do |flag|
     STDERR.puts "ERROR: #{flag} is not a valid argument."
@@ -83,7 +135,7 @@ when :consumer
     STDERR.puts "Error: Missing routing key or queue argument."
     abort p
   end
-  cat.consume(exchange, routing_key, queue)
+  cat.consume(exchange, routing_key, queue, format)
 else
   STDERR.puts "Error: Missing argument, --producer or --consumer required."
   abort p
