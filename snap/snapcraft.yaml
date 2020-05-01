@@ -26,3 +26,6 @@ parts:
       - git
       - libssl-dev
       - libevent-dev
+    override-build: |
+      snapcraftctl build
+      strip $SNAPCRAFT_PART_INSTALL/bin/*
