@@ -6,7 +6,8 @@ description: |
   netcat for AMQP. A CLI tool for publishing to and consuming from
   AMQP servers.
 license: MIT
-
+architectures:
+  - build-on: amd64
 grade: stable
 confinement: strict
 
