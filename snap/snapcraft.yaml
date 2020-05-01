@@ -7,7 +7,7 @@ description: |
   AMQP servers.
 license: MIT
 
-grade: devel # devel or stable
+grade: stable
 confinement: strict
 
 apps:
@@ -21,7 +21,7 @@ parts:
     plugin: crystal
     crystal-build-options:
       - --release
-    source: .
+    source: https://github.com/cloudamqp/amqpcat.git
     build-packages:
       - git
       - libssl-dev
