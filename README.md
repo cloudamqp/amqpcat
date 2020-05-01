@@ -1,18 +1,37 @@
 # amqpcat
 
-TODO: Write a description here
+netcat for AMQP. CLI tool to publish to and consume from AMQP servers.
 
 ## Installation
 
-TODO: Write installation instructions here
+Linux:
+
+```
+snap install amqpcat
+```
+
+Mac:
+
+```
+brew install amqpcat
+```
 
 ## Usage
 
-TODO: Write usage instructions here
+```
+Usage: amqpcat [arguments]
+    -P, --producer                   Producer mode, reading from STDIN, each line is a new message
+    -C, --consumer                   Consume mode, message bodies are written to STDOUT
+    -u URI, --uri=URI                URI to AMQP server
+    -e EXCHANGE, --exchange=EXCHANGE Exchange
+    -r ROUTINGKEY, --routing-key=KEY Routing key when publishing
+    -q QUEUE, --queue=QUEUE          Queue to consume from
+    -h, --help                       Show this help message
+```
 
 ## Development
 
-TODO: Write development instructions here
+amqpcat is built in [Crystal](https://crystal-lang.org/)
 
 ## Contributing
 
