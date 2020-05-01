@@ -6,7 +6,7 @@ authors:
 
 targets:
   amqpcat:
-    main: src/amqpcat.cr
+    main: src/cli.cr
 
 dependencies:
   amqp-client:
