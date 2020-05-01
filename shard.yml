@@ -2,7 +2,7 @@ name: amqpcat
 version: 0.1.0
 
 authors:
-  - Carl Hörberg <carl.hoerberg@gmail.com>
+  - Carl Hörberg <carl@cloudamqp.com>
 
 targets:
   amqpcat:
