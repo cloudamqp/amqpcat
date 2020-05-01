@@ -2,10 +2,10 @@ require "option_parser"
 require "amqp-client"
 
 class AMQPCat
-  VERSION = {{ `git describe 2>/dev/null || shards version`.chomp.stringify }}
+  VERSION = {{ `git describe 2>/dev/null || shards version`.stringify.gsub(/(^v|\n)/, "") }}
 
-  def initialize(@uri : String)
-    @client = AMQP::Client.new(@uri)
+  def initialize(uri : String)
+    @client = AMQP::Client.new(uri)
   end
 
   def produce(exchange : String, routing_key : String)
