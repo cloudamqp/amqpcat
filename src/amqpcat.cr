@@ -8,7 +8,7 @@ class AMQPCat
     @client = AMQP::Client.new(@uri)
   end
 
-  def produce(exchange, routing_key)
+  def produce(exchange : String, routing_key : String)
     loop do
       connection = @client.connect
       channel = connection.channel
@@ -23,17 +23,23 @@ class AMQPCat
     end
   end
 
-  def consume(queue_name)
+  def consume(exchange_name : String?, routing_key : String?, queue_name : String?)
+    exchange_name ||= ""
+    routing_key ||= ""
+    queue_name ||= ""
     loop do
       connection = @client.connect
       channel = connection.channel
       q =
         begin
-          channel.queue(queue_name, passive: true)
+          channel.queue(queue_name)
         rescue
           channel = connection.channel
-          channel.queue(queue_name)
+          channel.queue(queue_name, passive: true)
         end
+      unless exchange_name.empty? && routing_key.empty?
+        q.bind(exchange_name, routing_key)
+      end
       q.subscribe(block: true, no_ack: true) do |msg|
         STDOUT.puts msg.body_io
       end
@@ -59,7 +65,7 @@ p = OptionParser.parse do |parser|
   parser.on("-q QUEUE", "--queue=QUEUE", "Queue to consume from") { |v| queue = v }
   parser.on("-h", "--help", "Show this help message") { |v| puts parser; exit 0 }
   parser.invalid_option do |flag|
-    STDERR.puts "ERROR: #{flag} is not a valid option."
+    STDERR.puts "ERROR: #{flag} is not a valid argument."
     abort parser
   end
 end
@@ -68,17 +74,17 @@ cat = AMQPCat.new(uri)
 case mode
 when :producer
   unless routing_key || queue
-    STDERR.puts "Error: Missing routing key or queue argument"
+    STDERR.puts "Error: Missing routing key or queue argument."
     abort p
   end
   cat.produce(exchange, routing_key || queue || "")
 when :consumer
-  unless queue
-    STDERR.puts "Error: Missing queue argument"
+  unless routing_key || queue
+    STDERR.puts "Error: Missing routing key or queue argument."
     abort p
   end
-  cat.consume(queue.to_s)
+  cat.consume(exchange, routing_key, queue)
 else
-  STDERR.puts "Error: Missing mode argument"
+  STDERR.puts "Error: Missing argument, --producer or --consumer required."
   abort p
 end
