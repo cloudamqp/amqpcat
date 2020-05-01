@@ -51,12 +51,13 @@ queue = nil
 routing_key = nil
 p = OptionParser.parse do |parser|
   parser.banner = "Usage: #{File.basename PROGRAM_NAME} [arguments]"
-  parser.on("-u URI", "--uri=URI", "URI to AMQP server") { |v| uri = v }
   parser.on("-P", "--producer", "Producer mode, reading from STDIN, each line is a new message") { mode = :producer }
   parser.on("-C", "--consumer", "Consume mode, message bodies are written to STDOUT") { mode = :consumer }
-  parser.on("-q QUEUE", "--queue=QUEUE", "Queue to consume from") { |v| queue = v }
+  parser.on("-u URI", "--uri=URI", "URI to AMQP server") { |v| uri = v }
   parser.on("-e EXCHANGE", "--exchange=EXCHANGE", "Exchange") { |v| exchange = v }
-  parser.on("-r ROUTING_KEY", "--routing-key=KEY", "Routing key when publishing") { |v| routing_key = v }
+  parser.on("-r ROUTINGKEY", "--routing-key=KEY", "Routing key when publishing") { |v| routing_key = v }
+  parser.on("-q QUEUE", "--queue=QUEUE", "Queue to consume from") { |v| queue = v }
+  parser.on("-h", "--help", "Show this help message") { |v| puts parser; exit 0 }
   parser.invalid_option do |flag|
     STDERR.puts "ERROR: #{flag} is not a valid option."
     abort parser
