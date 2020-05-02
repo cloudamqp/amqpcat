@@ -36,6 +36,11 @@ Usage: amqpcat [arguments]
     -h, --help                       Show this help message
 ```
 
+## Examples
+
+Send messages to a queue named `test`:
+`yes | bin/amqpcat -P --uri=$CLOUDAMQP_URL -q test`
+
 ## Development
 
 amqpcat is built in [Crystal](https://crystal-lang.org/)
