@@ -74,6 +74,16 @@ Consume from the queue named `test`, format the output as CSV and pipe to file:
 amqpcat --consumer --uri=$CLOUDAMQP_URL --queue test --format "%e,%r,"%s"\n | tee messages.csv
 ```
 
+Publish messages from syslog to the exchange 'syslog' topic with the hostname as routing key
+```sh
+tail -f /var/log/syslog | amqpcat --producer --uri=$CLOUDAMQP_URL --exchange syslog --routing-key $HOST
+```
+
+Consume, parse and extract data from json messages:
+```sh
+amqpcat --consumer --queue json | jq .property
+```
+
 ## Development
 
 amqpcat is built with [Crystal](https://crystal-lang.org/)
