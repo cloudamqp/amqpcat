@@ -10,10 +10,10 @@ Linux:
 snap install amqpcat
 ```
 
-Mac:
+OS X:
 
 ```
-brew install amqpcat
+brew install cloudamqp/cloudamqp/amqpcat
 ```
 
 From source:
