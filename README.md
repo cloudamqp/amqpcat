@@ -19,9 +19,15 @@ brew install amqpcat
 From source:
 
 ```
-shards install
-shards build
+brew install crystal # os x
+snap install crystal # linux/ubuntu
+
+git clone https://github.com/cloudamqp/amqpcat.git
+cd amqpcat
+shards build --release --production
 ```
+
+There are more [Crystal installation alternatives](https://crystal-lang.org/install/).
 
 ## Usage
 
@@ -33,17 +39,33 @@ Usage: amqpcat [arguments]
     -e EXCHANGE, --exchange=EXCHANGE Exchange
     -r ROUTINGKEY, --routing-key=KEY Routing key when publishing
     -q QUEUE, --queue=QUEUE          Queue to consume from
+    -f FORMAT, --format=FORMAT       Format string (default "%s\n")
+				     %e: Exchange name
+				     %r: Routing key
+				     %s: Body, as string
+				     \n: Newline
+				     \t: Tab
+    -v, --version                    Display version
     -h, --help                       Show this help message
 ```
 
 ## Examples
 
 Send messages to a queue named `test`:
-`yes | bin/amqpcat -P --uri=$CLOUDAMQP_URL -q test`
+`echo Hello World | amqpcat --producer --uri=$CLOUDAMQP_URL --queue test`
+
+Consume from the queue named `test`:
+`amqpcat --consumer --uri=$CLOUDAMQP_URL --queue test`
+
+With a temporary queue, consume messages sent to the exchange amq.topic with the routing key 'hello.world':
+`amqpcat --consumer --uri=$CLOUDAMQP_URL --exchange amq.topic --routing-key hello.world`
+
+Consume from the queue named `test`, format the output as CSV and pipe to file:
+`amqpcat --consumer --uri=$CLOUDAMQP_URL --queue test --format "%e,%r,"%s"\n | tee messages.csv`
 
 ## Development
 
-amqpcat is built in [Crystal](https://crystal-lang.org/)
+amqpcat is built with [Crystal](https://crystal-lang.org/)
 
 ## Contributing
 
