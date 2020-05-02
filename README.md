@@ -16,6 +16,13 @@ Mac:
 brew install amqpcat
 ```
 
+From source:
+
+```
+shards install
+shards build
+```
+
 ## Usage
 
 ```
