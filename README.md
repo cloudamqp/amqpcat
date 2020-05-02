@@ -52,16 +52,27 @@ Usage: amqpcat [arguments]
 ## Examples
 
 Send messages to a queue named `test`:
-`echo Hello World | amqpcat --producer --uri=$CLOUDAMQP_URL --queue test`
+
+```sh
+echo Hello World | amqpcat --producer --uri=$CLOUDAMQP_URL --queue test
+```
 
 Consume from the queue named `test`:
-`amqpcat --consumer --uri=$CLOUDAMQP_URL --queue test`
+
+```sh
+amqpcat --consumer --uri=$CLOUDAMQP_URL --queue test
+```
 
 With a temporary queue, consume messages sent to the exchange amq.topic with the routing key 'hello.world':
-`amqpcat --consumer --uri=$CLOUDAMQP_URL --exchange amq.topic --routing-key hello.world`
+
+```sh
+amqpcat --consumer --uri=$CLOUDAMQP_URL --exchange amq.topic --routing-key hello.world
+```
 
 Consume from the queue named `test`, format the output as CSV and pipe to file:
-`amqpcat --consumer --uri=$CLOUDAMQP_URL --queue test --format "%e,%r,"%s"\n | tee messages.csv`
+```sh
+amqpcat --consumer --uri=$CLOUDAMQP_URL --queue test --format "%e,%r,"%s"\n | tee messages.csv
+```
 
 ## Development
 
