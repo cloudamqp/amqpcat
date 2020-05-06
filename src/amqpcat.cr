@@ -1,8 +1,13 @@
 require "amqp-client"
+require "./version"
 
 class AMQPCat
-  def initialize(uri : String)
-    @client = AMQP::Client.new(uri)
+  def initialize(uri)
+    u = URI.parse(uri)
+    p = u.query_params
+    p["name"] = "AMQPCat #{VERSION}"
+    u.query = p.to_s
+    @client = AMQP::Client.new(u)
   end
 
   def produce(exchange : String, routing_key : String)
