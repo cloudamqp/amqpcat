@@ -76,7 +76,7 @@ amqpcat --consumer --uri=$CLOUDAMQP_URL --queue test --format "%e,%r,"%s"\n | te
 
 Publish messages from syslog to the exchange 'syslog' topic with the hostname as routing key
 ```sh
-tail -f /var/log/syslog | amqpcat --producer --uri=$CLOUDAMQP_URL --exchange syslog --routing-key $HOST
+tail -f /var/log/syslog | amqpcat --producer --uri=$CLOUDAMQP_URL --exchange syslog --routing-key $HOSTNAME
 ```
 
 Consume, parse and extract data from json messages:
