@@ -10,10 +10,17 @@ class AMQPCat
     @client = AMQP::Client.new(u)
   end
 
-  def produce(exchange : String, routing_key : String)
+  def produce(exchange : String, routing_key : String, exchange_type : String)
+    STDIN.blocking = false
     loop do
       connection = @client.connect
       channel = connection.channel
+      begin
+        channel.exchange_declare exchange, exchange_type, passive: true
+      rescue
+        channel = connection.channel
+        channel.exchange_declare exchange, exchange_type, passive: false
+      end
       props = AMQP::Client::Properties.new(delivery_mode: 2_u8)
       while line = STDIN.gets
         channel.basic_publish line, exchange, routing_key, props: props

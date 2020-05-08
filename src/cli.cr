@@ -5,6 +5,7 @@ require "./version"
 uri = "amqp://localhost"
 mode = nil
 exchange = ""
+exchange_type = "direct"
 queue = nil
 routing_key = nil
 format = "%s\n"
@@ -23,7 +24,8 @@ p = OptionParser.parse do |parser|
   parser.on("-P", "--producer", "Producer mode, reading from STDIN, each line is a new message") { mode = :producer }
   parser.on("-C", "--consumer", "Consume mode, message bodies are written to STDOUT") { mode = :consumer }
   parser.on("-u URI", "--uri=URI", "URI to AMQP server") { |v| uri = v }
-  parser.on("-e EXCHANGE", "--exchange=EXCHANGE", "Exchange") { |v| exchange = v }
+  parser.on("-e EXCHANGE", "--exchange=EXCHANGE", "Exchange (default: '')") { |v| exchange = v }
+  parser.on("-t EXCHANGETYPE", "--exchange-type=TYPE", "Exchange type (default: direct)") { |v| exchange_type = v }
   parser.on("-r ROUTINGKEY", "--routing-key=KEY", "Routing key when publishing") { |v| routing_key = v }
   parser.on("-q QUEUE", "--queue=QUEUE", "Queue to consume from") { |v| queue = v }
   parser.on("-f FORMAT", "--format=FORMAT", FORMAT_STRING_HELP) { |v| format = v }
@@ -38,11 +40,11 @@ end
 cat = AMQPCat.new(uri)
 case mode
 when :producer
-  unless routing_key || queue
-    STDERR.puts "Error: Missing routing key or queue argument."
+  unless exchange || queue
+    STDERR.puts "Error: Missing exchange or queue argument."
     abort p
   end
-  cat.produce(exchange, routing_key || queue || "")
+  cat.produce(exchange, routing_key || queue || "", exchange_type)
 when :consumer
   unless routing_key || queue
     STDERR.puts "Error: Missing routing key or queue argument."
