@@ -1,5 +1,5 @@
 name: amqpcat
-version: 0.2.1
+version: 0.2.2
 
 authors:
   - Carl Hörberg <carl@cloudamqp.com>
@@ -12,6 +12,6 @@ dependencies:
   amqp-client:
     github: cloudamqp/amqp-client.cr
 
-crystal: 0.34.0
+crystal: 0.35.0
 
 license: MIT
