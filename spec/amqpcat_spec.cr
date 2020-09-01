@@ -9,7 +9,8 @@ describe AMQPCat do
     q.purge
 
     r, w = IO.pipe
-    cat = AMQPCat.new("amqp://localhost", r)
+    STDIN.reopen(r)
+    cat = AMQPCat.new("amqp://localhost")
     spawn do
       sleep 0.1
       w.puts "hello"
@@ -17,7 +18,7 @@ describe AMQPCat do
     end
     cat.produce("", "amqpcat-1", "direct")
 
-    sleep 1
+    sleep 0.1
     msg = q.get
     msg.should_not be_nil
     msg.not_nil!.body_io.to_s.should eq "hello"

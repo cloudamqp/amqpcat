@@ -2,7 +2,7 @@ require "amqp-client"
 require "./version"
 
 class AMQPCat
-  def initialize(uri, @input : IO::FileDescriptor = STDIN)
+  def initialize(uri)
     u = URI.parse(uri)
     p = u.query_params
     p["name"] = "AMQPCat #{VERSION}"
@@ -11,13 +11,13 @@ class AMQPCat
   end
 
   def produce(exchange : String, routing_key : String, exchange_type : String)
-    @input.blocking = false
+    STDIN.blocking = false
     loop do
       connection = @client.connect
       channel = connection.channel
       open_channel_declare_exchange(connection, exchange, exchange_type)
       props = AMQP::Client::Properties.new(delivery_mode: 2_u8)
-      while line = @input.gets
+      while line = STDIN.gets
         channel.basic_publish line, exchange, routing_key, props: props
       end
       connection.close
