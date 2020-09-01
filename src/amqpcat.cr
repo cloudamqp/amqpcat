@@ -15,7 +15,7 @@ class AMQPCat
     loop do
       connection = @client.connect
       channel = connection.channel
-      declare_exchange(connection, exchange, exchange_type)
+      open_channel_declare_exchange(connection, exchange, exchange_type)
       props = AMQP::Client::Properties.new(delivery_mode: 2_u8)
       while line = STDIN.gets
         channel.basic_publish line, exchange, routing_key, props: props
@@ -54,12 +54,15 @@ class AMQPCat
     end
   end
 
-  private def declare_exchange(connection, exchange, exchange_type)
+  private def open_channel_declare_exchange(connection, exchange, exchange_type)
     return if exchange == ""
+    channel = connection.channel
     channel.exchange_declare exchange, exchange_type, passive: true
+    channel
   rescue
     channel = connection.channel
     channel.exchange_declare exchange, exchange_type, passive: false
+    channel
   end
 
   private def format_output(io, format_str, msg)
