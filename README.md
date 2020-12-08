@@ -4,16 +4,22 @@ netcat for AMQP. CLI tool to publish to and consume from AMQP servers.
 
 ## Installation
 
-Linux:
+Using snap:
 
 ```
 snap install amqpcat
 ```
 
-OS X:
+Using Homebrew in OS X:
 
 ```
-brew install cloudamqp/cloudamqp/amqpcat
+brew install cloudamqp/amqpcat
+```
+
+Using Docker/Podman:
+
+```
+docker run -it cloudamqp/amqpcat
 ```
 
 From source:
