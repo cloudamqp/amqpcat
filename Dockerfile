@@ -1,4 +1,4 @@
-FROM crystallang/crystal:0.35.1-alpine as builder
+FROM crystallang/crystal:0.36-alpine as builder
 WORKDIR /tmp
 COPY shard.yml shard.lock ./
 RUN shards install --production
