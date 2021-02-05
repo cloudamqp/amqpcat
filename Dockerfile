@@ -8,6 +8,6 @@ RUN strip bin/*
 
 FROM scratch
 USER 2:2
-COPY --from=builder /etc/ssl/cert.pem /etc/ssl/openssl.cnf /etc/ssl/
+COPY --from=builder /etc/ssl/cert.pem /etc/ssl/
 COPY --from=builder /tmp/bin/amqpcat /amqpcat
 ENTRYPOINT ["/amqpcat"]
