@@ -6,5 +6,5 @@ shards:
 
   amqp-client:
     git: https://github.com/cloudamqp/amqp-client.cr.git
-    version: 0.6.2
+    version: 0.6.3
 
