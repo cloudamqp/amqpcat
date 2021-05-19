@@ -29,8 +29,8 @@ p = OptionParser.parse do |parser|
   parser.on("-r ROUTINGKEY", "--routing-key=KEY", "Routing key when publishing") { |v| routing_key = v }
   parser.on("-q QUEUE", "--queue=QUEUE", "Queue to consume from") { |v| queue = v }
   parser.on("-f FORMAT", "--format=FORMAT", FORMAT_STRING_HELP) { |v| format = v }
-  parser.on("-v", "--version", "Display version") { |v| puts AMQPCat::VERSION; exit 0 }
-  parser.on("-h", "--help", "Show this help message") { |v| puts parser; exit 0 }
+  parser.on("-v", "--version", "Display version") { |_| puts AMQPCat::VERSION; exit 0 }
+  parser.on("-h", "--help", "Show this help message") { |_| puts parser; exit 0 }
   parser.invalid_option do |flag|
     STDERR.puts "ERROR: #{flag} is not a valid argument."
     abort parser
@@ -45,13 +45,10 @@ when :producer
     abort p
   end
   cat.produce(exchange, routing_key || queue || "", exchange_type)
-when :consumer
+else
   unless routing_key || queue
     STDERR.puts "Error: Missing routing key or queue argument."
     abort p
   end
   cat.consume(exchange, routing_key, queue, format)
-else
-  STDERR.puts "Error: Missing argument, --producer or --consumer required."
-  abort p
 end
