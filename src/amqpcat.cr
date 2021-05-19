@@ -1,4 +1,5 @@
 require "amqp-client"
+require "compress/deflate"
 require "./version"
 
 class AMQPCat
@@ -65,6 +66,16 @@ class AMQPCat
     channel
   end
 
+  private def decode_payload(msg, o)
+    if msg.properties.content_encoding == "deflate"
+      Compress::Deflate::Reader.open(msg.body_io) do |r|
+        IO.copy(r, o)
+      end
+    else
+      IO.copy(msg.body_io, o)
+    end
+  end
+
   private def format_output(io, format_str, msg)
     io.sync = false
     match = false
@@ -75,7 +86,7 @@ class AMQPCat
       elsif match
         case c
         when 's'
-          io << msg.body_io
+          decode_payload(msg, io)
         when 'e'
           io << msg.exchange
         when 'r'
