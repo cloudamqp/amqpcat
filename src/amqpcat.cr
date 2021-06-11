@@ -1,5 +1,6 @@
 require "amqp-client"
 require "compress/deflate"
+require "compress/gzip"
 require "./version"
 
 class AMQPCat
@@ -66,13 +67,18 @@ class AMQPCat
     channel
   end
 
-  private def decode_payload(msg, o)
-    if msg.properties.content_encoding == "deflate"
+  private def decode_payload(msg, io)
+    case msg.properties.content_encoding
+    when "deflate"
       Compress::Deflate::Reader.open(msg.body_io) do |r|
-        IO.copy(r, o)
+        IO.copy(r, io)
+      end
+    when "gzip"
+      Compress::Gzip::Reader.open(msg.body_io) do |r|
+        IO.copy(r, io)
       end
     else
-      IO.copy(msg.body_io, o)
+      IO.copy(msg.body_io, io)
     end
   end
 
