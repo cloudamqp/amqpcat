@@ -1,5 +1,5 @@
 name: amqpcat
-base: core18
+base: core20
 version: git
 summary: CLI tool for publishing to and consuming from AMQP servers
 description: |
