@@ -8,6 +8,7 @@ description: |
 license: MIT
 architectures:
   - build-on: amd64
+  - build-on: arm64
 grade: stable
 confinement: strict
 
