@@ -12,7 +12,7 @@ class AMQPCat
     @client = AMQP::Client.new(u)
   end
 
-  def produce(exchange : String, routing_key : String, exchange_type : String)
+  def produce(exchange : String, routing_key : String, exchange_type : String, publish_confirm = false)
     STDIN.blocking = false
     loop do
       connection = @client.connect
@@ -20,7 +20,11 @@ class AMQPCat
       open_channel_declare_exchange(connection, exchange, exchange_type)
       props = AMQP::Client::Properties.new(delivery_mode: 2_u8)
       while line = STDIN.gets
-        channel.basic_publish line, exchange, routing_key, props: props
+        if publish_confirm
+          channel.basic_publish_confirm line, exchange, routing_key, props: props
+        else
+          channel.basic_publish line, exchange, routing_key, props: props
+        end
       end
       connection.close
       break
