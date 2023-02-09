@@ -7,6 +7,7 @@ COPY src/ src/
 RUN shards build --release --production --static && strip bin/*
 
 FROM scratch
+RUN apk add --no-cache libcrypto3
 USER 2:2
 COPY --from=builder /etc/ssl/cert.pem /etc/ssl/
 COPY --from=builder /tmp/bin/amqpcat /amqpcat
