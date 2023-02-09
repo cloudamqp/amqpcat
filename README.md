@@ -13,7 +13,7 @@ snap install amqpcat
 Using Homebrew in OS X:
 
 ```
-brew install cloudamqp/cloudamqp/amqpcat
+brew install cloudamqp/amqpcat
 ```
 
 Using Docker/Podman:
