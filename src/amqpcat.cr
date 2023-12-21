@@ -34,30 +34,48 @@ class AMQPCat
     end
   end
 
-  def consume(exchange_name : String?, routing_key : String?, queue_name : String?, format : String)
-    exchange_name ||= ""
+  def consume(exchange_name : String, routing_key : String?, queue_name : String?, queue_type : String, format : String, offset = nil)
     routing_key ||= ""
     queue_name ||= ""
     loop do
       connection = @client.connect
-      channel = connection.channel
-      q =
-        begin
-          channel.queue(queue_name)
-        rescue
-          channel = connection.channel
-          channel.queue(queue_name, passive: true)
-        end
+      q = case queue_type
+          when "stream"
+            stream_queue(connection, queue_name)
+          else
+            queue(connection, queue_name)
+          end
       unless exchange_name.empty? && routing_key.empty?
         q.bind(exchange_name, routing_key)
       end
-      q.subscribe(block: true, no_ack: true) do |msg|
+      args = AMQP::Client::Arguments.new
+      args["x-stream-offset"] = offset if offset
+      q.subscribe(block: true, no_ack: false, args: args) do |msg|
         format_output(STDOUT, format, msg)
+        msg.ack
       end
     rescue ex
       STDERR.puts ex.message
       sleep 2
     end
+  end
+
+  private def queue(connection, name)
+    channel = connection.channel
+    channel.queue(name, auto_delete: true)
+  rescue
+    channel = connection.channel
+    channel.prefetch 10
+    channel.queue(name, passive: true)
+  end
+
+  private def stream_queue(connection, name)
+    args = AMQP::Client::Arguments.new({
+      "x-queue-type": "stream",
+    })
+    channel = connection.channel
+    channel.prefetch 10
+    channel.queue(name, auto_delete: false, args: args)
   end
 
   private def open_channel_declare_exchange(connection, exchange, exchange_type)
