@@ -6,10 +6,12 @@ uri = "amqp://localhost"
 mode = :consumer
 exchange = ""
 exchange_type = "direct"
-queue = nil
-routing_key = nil
+queue : String? = nil
+queue_type = "classic"
+routing_key : String? = nil
 format = "%s\n"
 publish_confirm = false
+offset = "next"
 
 FORMAT_STRING_HELP = <<-HELP
 Format string (default "%s\\n")
@@ -31,7 +33,18 @@ p = OptionParser.parse do |parser|
   parser.on("-t EXCHANGETYPE", "--exchange-type=TYPE", "Exchange type (default: direct)") { |v| exchange_type = v }
   parser.on("-r ROUTINGKEY", "--routing-key=KEY", "Routing key when publishing") { |v| routing_key = v }
   parser.on("-q QUEUE", "--queue=QUEUE", "Queue to consume from") { |v| queue = v }
+  parser.on("", "--queue-type=QUEUE_TYPE", "Queue type (classic, quorum or stream)") { |v| queue_type = v }
   parser.on("-c", "--publish-confirm", "Confirm publishes") { publish_confirm = true }
+  parser.on("-o OFFSET", "--offset OFFSET", "Stream queue: Offset to start reading from ") do |v|
+    if %w[first next last].includes? v
+      offset = v
+    elsif /^\d/.match v
+      offset = v.to_i
+    else
+      STDERR.puts "Error: Invalid offset, support \"first\", \"next\", \"last\" or offset."
+      exit 1
+    end
+  end
   parser.on("-f FORMAT", "--format=FORMAT", FORMAT_STRING_HELP) { |v| format = v }
   parser.on("-v", "--version", "Display version") { puts AMQPCat::VERSION; exit 0 }
   parser.on("-h", "--help", "Show this help message") { puts parser; exit 0 }
