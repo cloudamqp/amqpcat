@@ -3,7 +3,7 @@ require "./amqpcat"
 require "./version"
 
 uri = "amqp://localhost"
-mode = nil
+mode = :consumer
 exchange = ""
 exchange_type = "direct"
 queue = nil
@@ -54,8 +54,5 @@ when :consumer
     STDERR.puts "Error: Missing routing key or queue argument."
     abort p
   end
-  cat.consume(exchange, routing_key, queue, format)
-else
-  STDERR.puts "Error: Missing argument, --producer or --consumer required."
-  abort p
+  cat.consume(exchange, routing_key, queue, queue_type, format, offset)
 end
