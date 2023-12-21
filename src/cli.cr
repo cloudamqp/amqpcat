@@ -15,7 +15,9 @@ FORMAT_STRING_HELP = <<-HELP
 Format string (default "%s\\n")
 \t\t\t\t     %e: Exchange name
 \t\t\t\t     %r: Routing key
+\t\t\t\t     %t: Content type
 \t\t\t\t     %s: Body, as string
+\t\t\t\t     %h: Headers, as key=value
 \t\t\t\t     \\n: Newline
 \t\t\t\t     \\t: Tab
 HELP

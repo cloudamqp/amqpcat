@@ -86,6 +86,12 @@ class AMQPCat
     end
   end
 
+  private def write_headers(io, headers)
+    headers.each do |k, v|
+      io << k << "=" << v << "\n"
+    end
+  end
+
   private def format_output(io, format_str, msg)
     io.sync = false
     match = false
@@ -101,6 +107,12 @@ class AMQPCat
           io << msg.exchange
         when 'r'
           io << msg.routing_key
+        when 'h'
+          if headers = msg.properties.headers
+            write_headers(io, headers)
+          end
+        when 't'
+          io << msg.properties.content_type
         when '%'
           io << '%'
         else
