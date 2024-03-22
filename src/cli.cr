@@ -29,6 +29,7 @@ p = OptionParser.parse do |parser|
   parser.banner = "Usage: #{File.basename PROGRAM_NAME} [arguments]"
   parser.on("-P", "--producer", "Producer mode, reading from STDIN, each line is a new message") { mode = :producer }
   parser.on("-C", "--consumer", "Consume mode, message bodies are written to STDOUT") { mode = :consumer }
+  parser.on("-R", "--rpc", "Remote prodecure call mode, reading from STDIN and returning result STDOUT") { mode = :rpc }
   parser.on("-u URI", "--uri=URI", "URI to AMQP server") { |v| uri = v }
   parser.on("-e EXCHANGE", "--exchange=EXCHANGE", "Exchange (default: '')") { |v| exchange = v }
   parser.on("-t EXCHANGETYPE", "--exchange-type=TYPE", "Exchange type (default: direct)") { |v| exchange_type = v }
@@ -73,4 +74,14 @@ when :consumer
     abort p
   end
   cat.consume(exchange, routing_key, queue, queue_type, format, offset)
+when :rpc
+  unless exchange
+    STDERR.puts "Error: Missing exchange argument."
+    abort p
+  end
+  unless routing_key
+    STDERR.puts "Error: Missing routing key argument."
+    abort p
+  end
+  cat.rpc(exchange, routing_key.not_nil!, exchange_type, format)
 end

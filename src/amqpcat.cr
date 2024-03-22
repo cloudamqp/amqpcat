@@ -59,6 +59,28 @@ class AMQPCat
     end
   end
 
+  def rpc(exchange : String, routing_key : String, exchange_type : String, format : String)
+    STDIN.blocking = false
+    loop do
+      connection = @client.connect
+      channel = connection.channel
+      open_channel_declare_exchange(connection, exchange, exchange_type)
+      channel.basic_consume("amq.rabbitmq.reply-to") do |msg|
+        format_output(STDOUT, format, msg)
+      end
+      props = AMQP::Client::Properties.new(reply_to: "amq.rabbitmq.reply-to")
+      while line = STDIN.gets
+        channel.basic_publish line, exchange, routing_key, props: props
+      end
+      sleep 1 # wait for the last reply
+      connection.close
+      break
+    rescue ex
+      STDERR.puts ex.message
+      sleep 2
+    end
+  end
+
   private def queue(connection, name)
     channel = connection.channel
     channel.queue(name, auto_delete: true)
