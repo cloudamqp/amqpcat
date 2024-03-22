@@ -12,13 +12,12 @@ class AMQPCat
     @client = AMQP::Client.new(u)
   end
 
-  def produce(exchange : String, routing_key : String, exchange_type : String, publish_confirm = false)
+  def produce(exchange : String, routing_key : String, exchange_type : String, publish_confirm : Bool, props : AMQP::Client::Properties)
     STDIN.blocking = false
     loop do
       connection = @client.connect
       channel = connection.channel
       open_channel_declare_exchange(connection, exchange, exchange_type)
-      props = AMQP::Client::Properties.new(delivery_mode: 2_u8)
       while line = STDIN.gets
         if publish_confirm
           channel.basic_publish_confirm line, exchange, routing_key, props: props
@@ -104,7 +103,7 @@ class AMQPCat
     end
   end
 
-  private def write_headers(io, headers)
+  private def print_headers(io, headers)
     headers.each do |k, v|
       io << k << "=" << v << "\n"
     end
@@ -127,7 +126,7 @@ class AMQPCat
           io << msg.routing_key
         when 'h'
           if headers = msg.properties.headers
-            write_headers(io, headers)
+            print_headers(io, headers)
           end
         when 't'
           io << msg.properties.content_type
