@@ -11,7 +11,7 @@ queue_type = "classic"
 routing_key : String? = nil
 format = "%s\n"
 publish_confirm = false
-offset = "next"
+offset = nil
 props = AMQP::Client::Properties.new(delivery_mode: 2_u8)
 
 FORMAT_STRING_HELP = <<-HELP
