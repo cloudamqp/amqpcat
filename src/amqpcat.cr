@@ -29,7 +29,7 @@ class AMQPCat
       break
     rescue ex
       STDERR.puts ex.message
-      sleep 2
+      sleep 2.seconds
     end
   end
 
@@ -55,7 +55,7 @@ class AMQPCat
       end
     rescue ex
       STDERR.puts ex.message
-      sleep 2
+      sleep 2.seconds
     end
   end
 
@@ -72,12 +72,12 @@ class AMQPCat
       while line = STDIN.gets
         channel.basic_publish line, exchange, routing_key, props: props
       end
-      sleep 1 # wait for the last reply
+      sleep 1.seconds # wait for the last reply
       connection.close
       break
     rescue ex
       STDERR.puts ex.message
-      sleep 2
+      sleep 2.seconds
     end
   end
 
