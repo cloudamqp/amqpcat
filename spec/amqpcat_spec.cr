@@ -15,7 +15,8 @@ describe AMQPCat do
       w.puts "hello"
       w.close
     end
-    cat.produce("", "amqpcat-1", "direct")
+    props = AMQP::Client::Properties.new
+    cat.produce("", "amqpcat-1", "direct", false, props)
 
     sleep 0.1.seconds
     msg = q.get
