@@ -12,6 +12,7 @@ routing_key : String? = nil
 format = "%s\n"
 publish_confirm = false
 offset = nil
+output_dir : String? = nil
 props = AMQP::Client::Properties.new(delivery_mode: 2_u8)
 
 FORMAT_STRING_HELP = <<-HELP
@@ -48,6 +49,7 @@ p = OptionParser.parse do |parser|
     end
   end
   parser.on("-f FORMAT", "--format=FORMAT", FORMAT_STRING_HELP) { |v| format = v }
+  parser.on("-d DIR", "--dir=DIR", "Directory to write messages to (as separate files)") { |v| output_dir = v }
   parser.on("--content-type=TYPE", "Content type header") { |v| props.content_type = v }
   parser.on("--content-encoding=ENC", "Content encoding header") { |v| props.content_encoding = v }
   parser.on("--priority=LEVEL", "Priority header") { |v| props.priority = v.to_u8? || abort "Priority must be between 0 and 255" }
@@ -73,7 +75,7 @@ when :consumer
     STDERR.puts "Error: Missing routing key or queue argument."
     abort p
   end
-  cat.consume(exchange, routing_key, queue, queue_type, format, offset)
+  cat.consume(exchange, routing_key, queue, queue_type, format, offset, output_dir)
 when :rpc
   unless exchange
     STDERR.puts "Error: Missing exchange argument."

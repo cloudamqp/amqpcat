@@ -1,6 +1,7 @@
 require "amqp-client"
 require "compress/deflate"
 require "compress/gzip"
+require "mime"
 require "./version"
 
 class AMQPCat
@@ -33,9 +34,14 @@ class AMQPCat
     end
   end
 
-  def consume(exchange_name : String, routing_key : String?, queue_name : String?, queue_type : String, format : String, offset = nil)
+  def consume(exchange_name : String, routing_key : String?, queue_name : String?, queue_type : String, format : String, offset = nil, output_dir : String? = nil)
     routing_key ||= ""
     queue_name ||= ""
+
+    if output_dir
+      Dir.mkdir(output_dir) unless Dir.exists?(output_dir)
+    end
+
     loop do
       connection = @client.connect
       q = case queue_type
@@ -50,7 +56,11 @@ class AMQPCat
       args = AMQP::Client::Arguments.new
       args["x-stream-offset"] = offset if offset
       q.subscribe(block: true, no_ack: false, args: args) do |msg|
-        format_output(STDOUT, format, msg)
+        if output_dir
+          write_message_to_file(msg, output_dir)
+        else
+          format_output(STDOUT, format, msg)
+        end
         msg.ack
       end
     rescue ex
@@ -129,6 +139,37 @@ class AMQPCat
     headers.each do |k, v|
       io << k << "=" << v << "\n"
     end
+  end
+
+  private def write_message_to_file(msg, dir_path : String)
+    # use message ID if available, or correlation ID, otherwise use timestamp
+    msg_id = msg.properties.message_id || msg.properties.correlation_id || "#{Time.utc.to_unix_ns}"
+
+    # get appropriate extension based on message properties
+    extension = guess_extension(msg.properties.content_type, msg.properties.content_encoding)
+
+    file_path = File.join(dir_path, "#{msg_id}#{extension}")
+
+    File.open(file_path, "w") do |file|
+      decode_payload(msg, file)
+    end
+
+    STDOUT.puts "#{file_path}"
+  end
+
+  private def guess_extension(content_type : String?, content_encoding : String? = nil) : String
+    # content_type is preferred over content_encoding
+    if content_type
+      extensions = MIME.extensions(content_type)
+      return "#{extensions.first}" unless extensions.empty?
+    end
+
+    if content_encoding == "gzip" || content_encoding == "deflate"
+      return ".bin"
+    end
+
+    # or maybe its plain text
+    return ".txt"
   end
 
   private def format_output(io, format_str, msg)
