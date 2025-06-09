@@ -41,16 +41,17 @@ There are more [Crystal installation alternatives](https://crystal-lang.org/inst
 Usage: amqpcat [arguments]
     -P, --producer                   Producer mode, reading from STDIN, each line is a new message
     -C, --consumer                   Consume mode, message bodies are written to STDOUT
-    -u URI, --uri=URI                URI to AMQP server
+    -u URI, --uri=URI                URI to AMQP servera
+    -d DIR, --dir=DIR                Directory to dump messages info when consuming
     -e EXCHANGE, --exchange=EXCHANGE Exchange
     -r ROUTINGKEY, --routing-key=KEY Routing key when publishing
     -q QUEUE, --queue=QUEUE          Queue to consume from
     -f FORMAT, --format=FORMAT       Format string (default "%s\n")
-				     %e: Exchange name
-				     %r: Routing key
-				     %s: Body, as string
-				     \n: Newline
-				     \t: Tab
+                     %e: Exchange name
+                     %r: Routing key
+                     %s: Body, as string
+                     \n: Newline
+                     \t: Tab
     -v, --version                    Display version
     -h, --help                       Show this help message
 ```
@@ -67,6 +68,14 @@ Consume from the queue named `test`:
 
 ```sh
 amqpcat --consumer --uri=$CLOUDAMQP_URL --queue test
+```
+
+Consume from the queue named `files`, dumping each message into a given
+directory, instead of STDOUT, deriving the filename from the message
+properties, or timestamp if no properties are set:
+
+```sh
+amqpcat --consumer --uri=$CLOUDAMQP_URL --queue files --dir /tmp/miaow/
 ```
 
 With a temporary queue, consume messages sent to the exchange amq.topic with the routing key 'hello.world':
