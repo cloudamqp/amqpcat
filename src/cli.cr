@@ -38,7 +38,7 @@ p = OptionParser.parse do |parser|
   parser.on("-q QUEUE", "--queue=QUEUE", "Queue to consume from") { |v| queue = v }
   parser.on("", "--queue-type=QUEUE_TYPE", "Queue type (classic, quorum or stream)") { |v| queue_type = v }
   parser.on("-c", "--publish-confirm", "Confirm publishes") { publish_confirm = true }
-  parser.on("-p VALUE", "--persistent=VALUE", "Delivery mode, 1 = transient, 2 = persistent") do |v|
+  parser.on("-m VALUE", "--mode=VALUE", "Delivery mode, 1 = transient, 2 = persistent") do |v|
     props.delivery_mode = case v
     when "1" then 1_u8
     when "2" then 2_u8
