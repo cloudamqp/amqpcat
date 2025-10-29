@@ -38,7 +38,14 @@ p = OptionParser.parse do |parser|
   parser.on("-q QUEUE", "--queue=QUEUE", "Queue to consume from") { |v| queue = v }
   parser.on("", "--queue-type=QUEUE_TYPE", "Queue type (classic, quorum or stream)") { |v| queue_type = v }
   parser.on("-c", "--publish-confirm", "Confirm publishes") { publish_confirm = true }
-  parser.on("-o OFFSET", "--offset OFFSET", "Stream queue: Offset to start reading from ") do |v|
+  parser.on("-p VALUE", "--persistent=VALUE", "Delivery mode, 1 = transient, 2 = persistent") do |v|
+    props.delivery_mode = case v
+    when "1" then 1_u8
+    when "2" then 2_u8
+    else abort "Error: delivery_mode must be 1 or 2, got: #{v.inspect}"
+    end
+  end
+ parser.on("-o OFFSET", "--offset OFFSET", "Stream queue: Offset to start reading from ") do |v|
     if %w[first next last].includes? v
       offset = v
     elsif /^\d/.match v
