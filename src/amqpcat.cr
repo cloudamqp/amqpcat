@@ -13,6 +13,10 @@ class AMQPCat
     @client = AMQP::Client.new(u)
   end
 
+  def connect
+    @client.connect
+  end
+
   def produce(exchange : String, routing_key : String, exchange_type : String, publish_confirm : Bool, props : AMQP::Client::Properties)
     STDIN.blocking = false
     loop do

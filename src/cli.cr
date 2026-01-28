@@ -14,6 +14,7 @@ publish_confirm = false
 offset = nil
 output_dir : String? = nil
 props = AMQP::Client::Properties.new(delivery_mode: 2_u8)
+exit_on_connect = false
 
 FORMAT_STRING_HELP = <<-HELP
 Format string (default "%s\\n")
@@ -40,12 +41,12 @@ p = OptionParser.parse do |parser|
   parser.on("-c", "--publish-confirm", "Confirm publishes") { publish_confirm = true }
   parser.on("-m VALUE", "--mode=VALUE", "Delivery mode, 1 = transient, 2 = persistent") do |v|
     props.delivery_mode = case v
-    when "1" then 1_u8
-    when "2" then 2_u8
-    else abort "Error: delivery_mode must be 1 or 2, got: #{v.inspect}"
-    end
+                          when "1" then 1_u8
+                          when "2" then 2_u8
+                          else          abort "Error: delivery_mode must be 1 or 2, got: #{v.inspect}"
+                          end
   end
- parser.on("-o OFFSET", "--offset OFFSET", "Stream queue: Offset to start reading from ") do |v|
+  parser.on("-o OFFSET", "--offset OFFSET", "Stream queue: Offset to start reading from ") do |v|
     if %w[first next last].includes? v
       offset = v
     elsif /^\d/.match v
@@ -61,6 +62,7 @@ p = OptionParser.parse do |parser|
   parser.on("--content-encoding=ENC", "Content encoding header") { |v| props.content_encoding = v }
   parser.on("--priority=LEVEL", "Priority header") { |v| props.priority = v.to_u8? || abort "Priority must be between 0 and 255" }
   parser.on("--expiration=TIME", "Expiration header (ms before msg is dead lettered)") { |v| props.expiration = v }
+  parser.on("-z", "Exit on connection") { exit_on_connect = true }
   parser.on("-v", "--version", "Display version") { puts AMQPCat::VERSION; exit 0 }
   parser.on("-h", "--help", "Show this help message") { puts parser; exit 0 }
   parser.invalid_option do |flag|
@@ -70,6 +72,12 @@ p = OptionParser.parse do |parser|
 end
 
 cat = AMQPCat.new(uri)
+
+if exit_on_connect
+  cat.connect
+  exit 0
+end
+
 case mode
 when :producer
   unless exchange || queue
