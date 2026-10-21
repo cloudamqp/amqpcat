@@ -139,9 +139,15 @@ class AMQPCat
     end
   end
 
-  private def print_headers(io, headers)
+  def print_headers(io, headers)
     headers.each do |k, v|
-      io << k << "=" << v << "\n"
+      io << k << "="
+      if v.is_a?(AMQ::Protocol::Table)
+        v.inspect(io)
+      else
+        io << v
+      end
+      io << "\n"
     end
   end
 
