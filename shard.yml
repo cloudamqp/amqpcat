@@ -12,6 +12,6 @@ dependencies:
   amqp-client:
     github: cloudamqp/amqp-client.cr
 
-crystal: 1.0.0
+crystal: ">= 1.20.0"
 
 license: MIT
