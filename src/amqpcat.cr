@@ -18,7 +18,7 @@ class AMQPCat
   end
 
   def produce(exchange : String, routing_key : String, exchange_type : String, publish_confirm : Bool, props : AMQP::Client::Properties)
-    STDIN.blocking = false
+    IO::FileDescriptor.set_blocking(STDIN.fd, false)
     loop do
       connection = @client.connect
       channel = connection.channel
@@ -74,7 +74,7 @@ class AMQPCat
   end
 
   def rpc(exchange : String, routing_key : String, exchange_type : String, format : String)
-    STDIN.blocking = false
+    IO::FileDescriptor.set_blocking(STDIN.fd, false)
     loop do
       connection = @client.connect
       channel = connection.channel
