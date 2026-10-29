@@ -50,8 +50,12 @@ Usage: amqpcat [arguments]
                      %e: Exchange name
                      %r: Routing key
                      %s: Body, as string
+                     %l: Latency in µs (needs a stamped message)
                      \n: Newline
                      \t: Tab
+        --timestamp                  Producer: stamp messages with send time (x-sent-at header)
+        --perftest-compat            Stamp/read send time as a 12 byte body prefix (PerfTest/omq compatible)
+        --stats [SECS]               Print msg rate, latency and confirm latency to STDERR every SECS (default 1)
     -v, --version                    Display version
     -h, --help                       Show this help message
 ```
@@ -114,3 +118,31 @@ amqpcat is built with [Crystal](https://crystal-lang.org/)
 ## Contributors
 
 - [Carl Hörberg](https://github.com/carlhoerberg) - creator and maintainer
+
+## Measuring latency
+
+Producers stamp each message with the wall-clock send time, and consumers
+compute `now - sent` on delivery. Publisher confirm latency (`-c`) is measured
+per message on the producer.
+
+```sh
+# producer, stamps the x-sent-at header and prints confirm latency every second
+yes hello | amqpcat -P -q test -c --timestamp --stats
+
+# consumer, prints min/p50/p95/p99/max latency every second
+amqpcat -C -q test --stats > /dev/null
+
+# per message latency in µs
+amqpcat -C -q test -f '%l\n'
+```
+
+Use `--perftest-compat` on both sides to put the timestamp in a 12 byte body
+prefix (4 byte sequence number + 8 byte big endian timestamp), as RabbitMQ
+PerfTest and [omq](https://github.com/rabbitmq/omq) do, so that amqpcat can
+consume their messages and vice versa. Note that PerfTest needs `--use-millis`
+for its timestamps to be comparable across processes.
+
+Latency uses wall-clock time, so across hosts the numbers are only as accurate
+as the clock synchronisation. Because `-c` waits for each confirm before
+publishing the next message, the producer rate is bounded by the confirm round
+trip.

@@ -12,6 +12,9 @@ routing_key : String? = nil
 format = "%s\n"
 publish_confirm = false
 offset = nil
+timestamp = false
+perftest_compat = false
+stats_interval : Time::Span? = nil
 output_dir : String? = nil
 props = AMQP::Client::Properties.new(delivery_mode: 2_u8)
 
@@ -22,6 +25,7 @@ Format string (default "%s\\n")
 \t\t\t\t     %t: Content type
 \t\t\t\t     %s: Body, as string
 \t\t\t\t     %h: Headers, as key=value
+\t\t\t\t     %l: Latency in µs (needs a stamped message)
 \t\t\t\t     \\n: Newline
 \t\t\t\t     \\t: Tab
 HELP
@@ -61,6 +65,12 @@ p = OptionParser.parse do |parser|
   parser.on("--content-encoding=ENC", "Content encoding header") { |v| props.content_encoding = v }
   parser.on("--priority=LEVEL", "Priority header") { |v| props.priority = v.to_u8? || abort "Priority must be between 0 and 255" }
   parser.on("--expiration=TIME", "Expiration header (ms before msg is dead lettered)") { |v| props.expiration = v }
+  parser.on("", "--timestamp", "Producer: stamp messages with send time (x-sent-at header) for latency measurement") { timestamp = true }
+  parser.on("", "--perftest-compat", "Stamp/read the send time as a 12 byte body prefix, compatible with PerfTest and omq") { perftest_compat = true }
+  parser.on("", "--stats [SECS]", "Print msg rate, latency and confirm latency to STDERR every SECS (default 1)") do |v|
+    secs = v.empty? ? 1.0 : (v.to_f? || abort "Error: --stats interval must be a number, got: #{v.inspect}")
+    stats_interval = secs.seconds
+  end
   parser.on("-z", "Exit on connection") { mode = :connect }
   parser.on("-v", "--version", "Display version") { puts AMQPCat::VERSION; exit 0 }
   parser.on("-h", "--help", "Show this help message") { puts parser; exit 0 }
@@ -78,13 +88,13 @@ when :producer
     STDERR.puts "Error: Missing exchange or queue argument."
     abort p
   end
-  cat.produce(exchange, routing_key || queue || "", exchange_type, publish_confirm, props)
+  cat.produce(exchange, routing_key || queue || "", exchange_type, publish_confirm, props, timestamp, perftest_compat, stats_interval)
 when :consumer
   unless routing_key || queue
     STDERR.puts "Error: Missing routing key or queue argument."
     abort p
   end
-  cat.consume(exchange, routing_key, queue, queue_type, format, offset, output_dir)
+  cat.consume(exchange, routing_key, queue, queue_type, format, offset, output_dir, perftest_compat, stats_interval)
 when :rpc
   unless exchange
     STDERR.puts "Error: Missing exchange argument."
