@@ -8,3 +8,7 @@ shards:
     git: https://github.com/cloudamqp/amqp-client.cr.git
     version: 1.3.4
 
+  amqp10-protocol:
+    git: https://github.com/cloudamqp/amqp10-protocol.cr.git
+    version: 0.1.0
+

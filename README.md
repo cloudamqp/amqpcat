@@ -56,6 +56,8 @@ Usage: amqpcat [arguments]
     -h, --help                       Show this help message
 ```
 
+For AMQP 1.0, see the separate [`amqpcat10`](#amqp-10) command below.
+
 ## Examples
 
 Send messages to a queue named `test`:
@@ -98,6 +100,47 @@ Consume, parse and extract data from json messages:
 ```sh
 amqpcat --consumer --queue json | jq .property
 ```
+
+### AMQP 1.0
+
+AMQP 1.0 is different enough from 0-9-1 (no exchanges/queues to declare,
+links instead of channels, no RPC/stream semantics) that it gets its own
+command, `amqpcat10`, instead of a flag on `amqpcat`.
+
+The same `-e`/`-r`/`-q` options are reused to build a link address,
+following RabbitMQ/LavinMQ's address v2 scheme: `-q test` addresses
+`/queues/test`, and `-e my-exchange -r my-key` addresses
+`/exchanges/my-exchange/my-key`.
+
+```sh
+echo Hello World | amqpcat10 --producer --uri=$CLOUDAMQP_URL --queue test
+amqpcat10 --consumer --uri=$CLOUDAMQP_URL --queue test
+```
+
+If `-e`/`-r`/`-q` are all left out, the URI's path is tried as an address
+v2 path directly, so a URL that already names the queue or exchange works
+on its own:
+
+```sh
+echo Hello World | amqpcat10 --producer --uri amqp://host/queues/test
+```
+
+(`-e`/`-r`/`-q`, when given, always win -- the URI's path is then used as
+the vhost instead, as usual.)
+
+Since the URI's path can't be both the vhost and the address at once, use
+`--vhost` to name a non-default vhost while still addressing straight off
+the URI's path:
+
+```sh
+amqpcat10 --consumer --uri amqp://host/queues/test --vhost my-vhost
+```
+
+AMQP 1.0 has no topology frames, so the queue or exchange must already
+exist on the broker -- `amqpcat10` never declares it. Consuming via an
+exchange/routing-key binding isn't supported, only from a queue (`-q`).
+RPC mode and stream offsets aren't supported either, so `amqpcat10` has
+no `-R` or `-o` options.
 
 ## Development
 

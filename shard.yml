@@ -7,10 +7,14 @@ authors:
 targets:
   amqpcat:
     main: src/cli.cr
+  amqpcat10:
+    main: src/cli10.cr
 
 dependencies:
   amqp-client:
     github: cloudamqp/amqp-client.cr
+  amqp10-protocol:
+    github: cloudamqp/amqp10-protocol.cr
 
 crystal: ">= 1.20.0"
 
