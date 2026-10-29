@@ -3,6 +3,7 @@ require "compress/deflate"
 require "compress/gzip"
 require "mime"
 require "./version"
+require "./latency"
 
 class AMQPCat
   def initialize(uri)
@@ -17,18 +18,33 @@ class AMQPCat
     @client.connect
   end
 
-  def produce(exchange : String, routing_key : String, exchange_type : String, publish_confirm : Bool, props : AMQP::Client::Properties)
+  def produce(exchange : String, routing_key : String, exchange_type : String, publish_confirm : Bool, props : AMQP::Client::Properties,
+              timestamp : Bool = false, perftest_compat : Bool = false, stats_interval : Time::Span? = nil)
     IO::FileDescriptor.set_blocking(STDIN.fd, false)
+    stats = stats_interval.try { |i| Latency::Stats.new("producer", i) }
+    stats.try &.start
+    seq = 0_u32
     loop do
       connection = @client.connect
       channel = connection.channel
       open_channel_declare_exchange(connection, exchange, exchange_type)
       while line = STDIN.gets
-        if publish_confirm
-          channel.basic_publish_confirm line, exchange, routing_key, props: props
-        else
-          channel.basic_publish line, exchange, routing_key, props: props
+        body : String | Bytes = line
+        msg_props = props
+        if perftest_compat
+          body = Latency.stamp_body(line, seq)
+          seq &+= 1
+        elsif timestamp
+          msg_props = Latency.stamp_header(props)
         end
+        started = Time.instant
+        if publish_confirm
+          channel.basic_publish_confirm body, exchange, routing_key, props: msg_props
+          stats.try &.confirmed(Time.instant - started)
+        else
+          channel.basic_publish body, exchange, routing_key, props: msg_props
+        end
+        stats.try &.message(nil)
       end
       connection.close
       break
@@ -36,10 +52,25 @@ class AMQPCat
       STDERR.puts ex.message
       sleep 2.seconds
     end
+    stats.try &.flush
   end
 
-  def consume(exchange_name : String, routing_key : String?, queue_name : String?, queue_type : String, format : String, offset = nil, output_dir : String? = nil)
+  def consume(exchange_name : String, routing_key : String?, queue_name : String?, queue_type : String, format : String, offset = nil, output_dir : String? = nil,
+              perftest_compat : Bool = false, stats_interval : Time::Span? = nil)
     routing_key ||= ""
+    stats = stats_interval.try { |i| Latency::Stats.new("consumer", i) }
+    if stats
+      stats.start
+      # flush on Ctrl-C / kill so the total summary is printed
+      {Signal::INT, Signal::TERM}.each do |sig|
+        sig.trap do
+          stats.flush
+          exit 0
+        end
+      end
+    end
+    # only consume the body prefix when we are going to use it
+    measure = perftest_compat || stats || format.includes?("%l")
     queue_name ||= ""
 
     if output_dir
@@ -60,10 +91,12 @@ class AMQPCat
       args = AMQP::Client::Arguments.new
       args["x-stream-offset"] = offset if offset
       q.subscribe(block: true, no_ack: false, args: args) do |msg|
+        latency = Latency.measure(msg, perftest_compat) if measure
+        stats.try &.message(latency)
         if output_dir
           write_message_to_file(msg, output_dir)
         else
-          format_output(STDOUT, format, msg)
+          format_output(STDOUT, format, msg, latency)
         end
         msg.ack
       end
@@ -182,7 +215,7 @@ class AMQPCat
     return ".txt"
   end
 
-  private def format_output(io, format_str, msg)
+  private def format_output(io, format_str, msg, latency : Time::Span? = nil)
     io.sync = false
     match = false
     escape = false
@@ -203,6 +236,8 @@ class AMQPCat
           end
         when 't'
           io << msg.properties.content_type
+        when 'l'
+          latency.try { |l| io << l.total_microseconds.round(1) }
         when '%'
           io << '%'
         else
