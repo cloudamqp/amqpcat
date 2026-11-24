@@ -51,6 +51,8 @@ class AMQPCat
       q = case queue_type
           when "stream"
             stream_queue(connection, queue_name)
+          when "quorum"
+            quorum_queue(connection, queue_name)
           else
             queue(connection, queue_name)
           end
@@ -110,6 +112,14 @@ class AMQPCat
     })
     channel = connection.channel
     channel.prefetch 10
+    channel.queue(name, auto_delete: false, args: args)
+  end
+
+  private def quorum_queue(connection, name)
+    args = AMQP::Client::Arguments.new({
+      "x-queue-type": "quorum",
+    })
+    channel = connection.channel
     channel.queue(name, auto_delete: false, args: args)
   end
 
