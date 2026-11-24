@@ -1,4 +1,5 @@
 require "option_parser"
+require "json"
 require "./amqpcat"
 require "./version"
 
@@ -61,6 +62,11 @@ p = OptionParser.parse do |parser|
   parser.on("--content-encoding=ENC", "Content encoding header") { |v| props.content_encoding = v }
   parser.on("--priority=LEVEL", "Priority header") { |v| props.priority = v.to_u8? || abort "Priority must be between 0 and 255" }
   parser.on("--expiration=TIME", "Expiration header (ms before msg is dead lettered)") { |v| props.expiration = v }
+  parser.on("--headers=JSON", "Custom headers, as a JSON object") do |v|
+    headers = Hash(String, AMQ::Protocol::Field).new
+    JSON.parse(v).as_h.each { |key, value| headers[key] = value }
+    props.headers = AMQP::Client::Arguments.new(headers)
+  end
   parser.on("-z", "Exit on connection") { mode = :connect }
   parser.on("-v", "--version", "Display version") { puts AMQPCat::VERSION; exit 0 }
   parser.on("-h", "--help", "Show this help message") { puts parser; exit 0 }
