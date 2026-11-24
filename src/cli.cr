@@ -66,6 +66,8 @@ p = OptionParser.parse do |parser|
     headers = Hash(String, AMQ::Protocol::Field).new
     JSON.parse(v).as_h.each { |key, value| headers[key] = value }
     props.headers = AMQP::Client::Arguments.new(headers)
+  rescue JSON::ParseException | TypeCastError
+    abort "Error: --headers must be a JSON object, got: #{v.inspect}"
   end
   parser.on("-z", "Exit on connection") { mode = :connect }
   parser.on("-v", "--version", "Display version") { puts AMQPCat::VERSION; exit 0 }
